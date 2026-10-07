@@ -1,0 +1,36 @@
+import os
+import pickle
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+
+SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+
+
+def gmail_authenticate():
+    creds = None
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    credentials_path = os.path.join(base_dir, "credentials.json")
+    token_path = os.path.join(base_dir, "token.pickle")
+
+    if os.path.exists(token_path):
+        with open(token_path, "rb") as token:
+            creds = pickle.load(token)
+
+    if not creds or not creds.valid:
+        flow = InstalledAppFlow.from_client_secrets_file(
+            credentials_path,
+            SCOPES
+        )
+
+        creds = flow.run_local_server(
+            host="localhost",
+            port=8080,
+            open_browser=True
+        )
+
+        with open(token_path, "wb") as token:
+            pickle.dump(creds, token)
+
+    service = build("gmail", "v1", credentials=creds)
+    return service
